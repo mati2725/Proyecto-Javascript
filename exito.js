@@ -1,42 +1,41 @@
-class Reserva{
-    constructor(habitacion, personas, noches, check_in, check_out,precio){
-        this.habitacion = habitacion;
-        this.personas = personas;
-        this.noches = noches;
-        this.check_in = check_in;
-        this.check_out = check_out;
-        this.precio = precio;
+let obj =JSON.parse( sessionStorage.getItem("reservaPendiente"))
+async function getHabitaciones() {
+    let listHabitaciones = [];
+    await fetch('https://657cddeb853beeefdb9a0ef6.mockapi.io/reservas/habitacion', {
+        method: 'GET',
+        headers: {'content-type':'application/json'},
+        }).then(res => {
+            return res.json();
+        })
+        .then(data => data.forEach(hab =>{
+            listHabitaciones.push(hab);
+        }))
+        .catch(error => alert(error));
+        return listHabitaciones;
+}
+document.getElementById("confirmarReserva").onclick = async () =>{
+    let jsonReserva = JSON.stringify(obj);
+    await fetch('https://657cddeb853beeefdb9a0ef6.mockapi.io/reservas/reserva', {
+    method: 'POST',
+    headers: {'content-type':'application/json'},
+    // Send your data in the request body as JSON
+    body: jsonReserva
+    }).then(res => {
+    if (res.ok) {
+        alert("Reserva hecha con éxito")
+        sessionStorage.removeItem("reservaPendiente")
+        location.href="index.html"
     }
-    crearReserva(){
-        // Declarar la variable reservas
-        const reservas = [];
-            
-        // Parsear el valor almacenado en sessionStorage
-        const json = JSON.parse(sessionStorage.getItem("Reservas"));
-
-        // Recorrer el objeto JSON y crear objetos Reserva
-        if (json) {
-            for (const reserva of json) {
-                reservas.push(new Reserva(reserva.habitacion, reserva.personas, reserva.noches, reserva.check_in, reserva.check_out, reserva.precio));
-            }
-        }
-        reservas.push(new Reserva(this.habitacion,this.personas,this.noches,this.check_in,this.check_out,this.precioS));
-        sessionStorage.setItem("Reservas",JSON.stringify(reservas));
-    }
-    getReservas(){
-        return JSON.parse(sessionStorage.getItem("Reservas"));
-    }
+    }).catch(error => {
+    })
 }
 
-let obj =JSON.parse( sessionStorage.getItem("reservaPendiente"))
-
+getHabitaciones().then(data => data.forEach( hab => {
+    if(obj.idHabitacion === hab.id){
+        document.getElementById("descripcion").innerHTML = hab.descripcion;
+    }
+}))
 document.getElementById("descripcion").innerHTML = obj.habitacion;
 document.getElementById("check_in").innerHTML = obj.check_in;
 document.getElementById("check_out").innerHTML = obj.check_out;
 document.getElementById("total").innerHTML = obj.precio;
-
-
-document.getElementById("confirmarReserva").onclick = () =>{
-    new Reserva().crearReserva(obj)
-    alert("Reserva hecha con éxito")
-}
