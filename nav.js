@@ -24,10 +24,12 @@ if(user === null){
     `
     dropdownUser.innerHTML+=
     `
+    <a id="misReservas">Mis Reservas</a>
     <a id="CerrarSesion">Cerrar Sesión</a>
     `
+    document.getElementById("misReservas").setAttribute('href','misReservas.html');
     document.getElementById("CerrarSesion").onclick = CerrarSesion;
-    document.getElementById("CerrarSesion").setAttribute('href','index.html') = CerrarSesion;
+    document.getElementById("CerrarSesion").setAttribute('href','index.html');
 } else if (user.tipoUsuario === 'admin'){
     document.getElementById("user-name").innerHTML = 
     `
@@ -39,5 +41,5 @@ if(user === null){
     <a id="CerrarSesion">Cerrar Sesión</a>
     `
     document.getElementById("CerrarSesion").onclick = CerrarSesion;
-    document.getElementById("CerrarSesion").setAttribute('href','index.html') = CerrarSesion;
+    document.getElementById("CerrarSesion").setAttribute('href','index.html');
 }
