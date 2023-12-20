@@ -36,6 +36,11 @@ document.getElementById("login").onclick = () => {
 
         location.href = "index.html"
     } catch (Error){
-        alert(Error);
+        Swal.fire({
+            title: 'Error',
+            text: Error,
+            icon: 'error',
+            confirmButtonText: 'Cerrar'
+          })
     }
 }

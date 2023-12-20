@@ -4,13 +4,17 @@ let check_out = document.getElementById('check_out');
 let cantidadPersonas, cantidadNoches;
 check_in.setAttribute("min",new Date().toISOString().split("T")[0]);
 check_out.setAttribute("min",new Date().toISOString().split("T")[0]);
-let validadorFecha = (check_in_pedido,check_out_pedido,check_in_reserva,check_out_reserva) => {
-    if(check_in_pedido > check_in_reserva && check_in_pedido < check_out_reserva){
-        return false;
-    } else if(check_out_pedido > check_in_reserva && check_out_pedido < check_out_reserva){
-        return false;
+let FechaReservada = (check_in_pedido,check_out_pedido,check_in_reserva,check_out_reserva) => {
+    if(check_in_pedido < check_in_reserva && check_out_pedido > check_in_reserva){
+        return true;
     }
-    return true;
+    if(check_in_pedido === check_in_reserva){
+        return true;
+    }
+    if(check_in_pedido > check_in_reserva && check_in_pedido < check_out_reserva){
+        return true;
+    }
+    return false;
 }
 async function getHabitaciones() {
     let listHabitaciones = [];
@@ -23,12 +27,19 @@ async function getHabitaciones() {
         .then(data => data.forEach(hab =>{
             listHabitaciones.push(hab);
         }))
-        .catch(error => alert(error));
+        .catch(error => {
+            Swal.fire({
+                title: 'Error',
+                text: error,
+                icon: 'error',
+                confirmButtonText: 'Cerrar'
+              })
+        });
         return listHabitaciones;
 }
-function getReservas(){
+async function getReservas(){
     let listReservas = [];
-    fetch('https://657cddeb853beeefdb9a0ef6.mockapi.io/reservas/reserva', {
+    await fetch('https://657cddeb853beeefdb9a0ef6.mockapi.io/reservas/reserva', {
         method: 'GET',
         headers: {'content-type':'application/json'},
         }).then(res => {
@@ -37,7 +48,14 @@ function getReservas(){
         .then(data => data.forEach(res =>{
             listReservas.push(res);
         }))
-        .catch(error => alert(error));
+        .catch(error => {
+            Swal.fire({
+                title: 'Error',
+                text: error,
+                icon: 'error',
+                confirmButtonText: 'Cerrar'
+              })
+        });
         return listReservas;
 }
 
@@ -60,25 +78,40 @@ document.getElementById('btnBuscarHabitaciones').onclick = () => {
             document.getElementById("contenedor").innerHTML = ""
             getHabitaciones()
                 .then(data => filtrarHabitaciones(data))
-                .then(data => data.forEach(hab =>{
-                    document.getElementById("contenedor").innerHTML +=
-                    `
-                    <div class="row pt-3 d-flex align-items-center">
-                        <div class="col-sm-3">
-                            <img class="w-100 rounded" src="${hab.imagen}" alt="${hab.descripcion}">
-                        </div>
-                        <div class="col-sm-7">
-                            <p>${hab.descripcion}</p>
-                        </div>
-                        <div class="col-sm-2">
-                            <p>$${hab.precio} por noche / total $${hab.precio * cantidadNoches} (${cantidadNoches} noches)</p>
-                            <input type="submit" class="btn btn-secondary ps-5 pe-5 pt-3 pb-3" onclick="redirigirReserva('${hab.id}')" value="RESERVAR"/>
-                        </div>
-                    </div>
-                    `;
-                }));        
+                .then(data => {
+                    if(data.length === 0){
+                        Swal.fire({
+                            text: "No hay disponibilidad para las fechas ingresadas, intenta con otras fechas",
+                            icon: 'info',
+                            confirmButtonText: 'Cerrar'
+                          })
+                        
+                    } else {
+                        data.forEach(hab =>{
+                            document.getElementById("contenedor").innerHTML +=
+                            `
+                            <div class="row pt-3 d-flex align-items-center">
+                                <div class="col-sm-3">
+                                    <img class="w-100 rounded" src="${hab.imagen}" alt="${hab.descripcion}">
+                                </div>
+                                <div class="col-sm-7">
+                                    <p>${hab.descripcion}</p>
+                                </div>
+                                <div class="col-sm-2">
+                                    <p>$${hab.precio} por noche / total $${hab.precio * cantidadNoches} (${cantidadNoches} noches)</p>
+                                    <input type="submit" class="btn btn-secondary ps-5 pe-5 pt-3 pb-3" onclick="redirigirReserva('${hab.id}')" value="RESERVAR"/>
+                                </div>
+                            </div>
+                            `;
+                        })
+                    }
+                });  
         } else {
-           alert("La fecha de check-out debe ser posterior a la fecha de check-in");
+            Swal.fire({
+                text: "La fecha de check-out debe ser posterior a la fecha de check-in",
+                icon: 'info',
+                confirmButtonText: 'Cerrar'
+              })
         }
     }
 }
@@ -92,7 +125,7 @@ async function filtrarHabitaciones(listHabitaciones){
     let listHabitacionesAuxiliar = listHabitaciones.slice();
     listReservas = await getReservas();
     for(const hab of listHabitaciones){
-        if( hab.personas < cantidadPersonas || isReservado(hab.id,check_in.value,check_out.value)){
+        if(hab.personas < cantidadPersonas || isReservado(hab.id,check_in.value,check_out.value)){
             let index = listHabitacionesAuxiliar.map(e => e.id).indexOf(hab.id);
             listHabitacionesAuxiliar.splice(index,1);
         }
@@ -103,7 +136,7 @@ function isReservado(idHabitacion,check_in,check_out){
     let reservado = false;
     listReservas.forEach(res => {
         if(res.idHabitacion === idHabitacion){
-            if(validadorFecha(check_in,check_out,res.check_in,res.check_out)){
+            if(FechaReservada(check_in,check_out,res.check_in,res.check_out)){
                 reservado = true;
             }
         }
@@ -116,7 +149,7 @@ async function redirigirReserva(idHabitacion){
     .then(data =>{
         data.forEach(hab=>{
             if(hab.id === idHabitacion){
-                let res = JSON.stringify({idHabitacion:hab.id, personas:cantidadPersonas, check_in:check_in.value,check_out:check_out.value,precio:hab.precio,user:user.user});
+                let res = JSON.stringify({idHabitacion:hab.id, personas:cantidadPersonas, check_in:check_in.value,check_out:check_out.value,precio:hab.precio,user:null});
                 sessionStorage.setItem("reservaPendiente",res);
                 location.href = "exito.html";
             }

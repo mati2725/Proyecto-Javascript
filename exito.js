@@ -10,24 +10,51 @@ async function getHabitaciones() {
         .then(data => data.forEach(hab =>{
             listHabitaciones.push(hab);
         }))
-        .catch(error => alert(error));
+        .catch(error => {
+            Swal.fire({
+                title: 'Error',
+                text: error,
+                icon: 'error',
+                confirmButtonText: 'Cerrar'
+              })
+        });
         return listHabitaciones;
 }
 document.getElementById("confirmarReserva").onclick = async () =>{
     let jsonReserva = JSON.stringify(obj);
-    await fetch('https://657cddeb853beeefdb9a0ef6.mockapi.io/reservas/reserva', {
-    method: 'POST',
-    headers: {'content-type':'application/json'},
-    // Send your data in the request body as JSON
-    body: jsonReserva
-    }).then(res => {
-    if (res.ok) {
-        alert("Reserva hecha con éxito")
-        sessionStorage.removeItem("reservaPendiente")
-        location.href="index.html"
+    if(obj.user == null){
+        Swal.fire({
+            text: 'Debe iniciar sesion antes de realizar una reserva',
+            icon: 'info',
+            confirmButtonText: 'Cerrar'
+          })
+    } else {
+        await fetch('https://657cddeb853beeefdb9a0ef6.mockapi.io/reservas/reserva', {
+        method: 'POST',
+        headers: {'content-type':'application/json'},
+        // Send your data in the request body as JSON
+        body: jsonReserva
+        }).then(res => {
+        if (res.ok) {
+            sessionStorage.removeItem("reservaPendiente")
+            Swal.fire({
+                title: 'Reserva exitósa!',
+                text: 'Reserva hecha con Exito! Puedes verla en Mis Reservas',
+                icon: 'success',
+                confirmButtonText: 'Cerrar'
+              }).then(result => {
+                  location.href="index.html"
+              })
+        }
+        }).catch(error => {
+            Swal.fire({
+                title: 'Error',
+                text: error,
+                icon: 'error',
+                confirmButtonText: 'Cerrar'
+              })
+        })
     }
-    }).catch(error => {
-    })
 }
 
 getHabitaciones().then(data => data.forEach( hab => {
@@ -38,4 +65,4 @@ getHabitaciones().then(data => data.forEach( hab => {
 document.getElementById("descripcion").innerHTML = obj.habitacion;
 document.getElementById("check_in").innerHTML = obj.check_in;
 document.getElementById("check_out").innerHTML = obj.check_out;
-document.getElementById("total").innerHTML = obj.precio;
+document.getElementById("total").innerHTML = '$'+obj.precio;

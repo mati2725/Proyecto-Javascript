@@ -1,34 +1,51 @@
-let listReservas = document.getElementById("listReservas");
-listReservas.innerHTML = "";
-fetch('https://657cddeb853beeefdb9a0ef6.mockapi.io/reservas/reserva', {
+async function cargarReservas(){
+    let listHabitaciones;
+    let listReservas = document.getElementById("listReservas");
+    listReservas.innerHTML = "";
+    await fetch('https://657cddeb853beeefdb9a0ef6.mockapi.io/reservas/habitacion', {
+        method: 'GET',
+        headers: {'content-type':'application/json'},
+        }).then(res => {
+            return res.json();
+        })
+        .then(data => {
+            listHabitaciones = data
+        })
+        .catch(error => {
+            Swal.fire({
+                title: 'Error',
+                text: error,
+                icon: 'error',
+                confirmButtonText: 'Cerrar'
+              })
+        });
+    
+    
+    await fetch('https://657cddeb853beeefdb9a0ef6.mockapi.io/reservas/reserva', {
     method: 'GET',
     headers: {'content-type':'application/json'},
-    }).then(res => {
-        return res.json();
     })
+    .then(res => res.json())
     .then(data => data.forEach(res =>{
+        let habitacion = listHabitaciones.find(hab=>hab.id === res.idHabitacion);
         listReservas.innerHTML +=
         `
-            <div class="row pt-3 d-flex align-items-center">
-                <div>
-                id habitacion: ${res.idHabitacion}
+            <div class="reservaItem">
+                <div class="imagen">
+                    <img src="${habitacion.imagen}">
                 </div>
-                <div>
-                check-in: ${res.check_in}
+                <div class="checkin">
+                    <p>Check-in: ${res.check_in}</p>
+                    <p>Check-out: ${res.check_out}</p>
                 </div>
-                <div>
-                check-out: ${res.check_out}
-                </div>
-                <div>
-                personas: ${res.personas}
-                </div>
-                <div>
-                precio: ${res.precio}
-                </div>
-                <div>
-                usuario: ${res.user}
+                <div class="infoItem">
+                <p>${res.personas} Personas</p>
+                <p>Precio: ${res.precio}</p>
+                <p>Usuario: ${res.user}</p>
                 </div>
             </div>
         `
-    }))
-    .catch(error => alert(error));
+    })
+    );
+}
+cargarReservas();
